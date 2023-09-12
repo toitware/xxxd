@@ -14,7 +14,7 @@ See the [Releases](releases/) area to download binaries for major OSs.
 * Long options must be used with double dashes, not single dashes.
 * The single letter options are the same as xxd, but some long form options have been added:
     * `--compact` A more compact output format for C format.
-    * `--indentation` Change the default indentation in C format (defalt 2).
+    * `--indentation` Change the default indentation in C format (default 2).
     * `--little-endian` An option that changes the endianness of multi-byte words without changing the format.
     * `--tabs` Use a mixture of tabs and spaces for indentation.
     * `--tab-width` Change the default tab width if tabs are used (8).
