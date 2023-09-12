@@ -11,7 +11,7 @@ execute_process(
 )
 
 # Log the XXD version.
-message("XXD version: ${XXD_VERSION}")
+message("XXD version: '${XXD_VERSION}'")
 
 file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.options")
 
