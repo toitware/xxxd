@@ -1,0 +1,2 @@
+# Gold files should not be normalized
+*.dump text eol=lf
