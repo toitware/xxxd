@@ -4,7 +4,7 @@
 
 # Determine the installed version of xxd:
 execute_process(
-  COMMAND bash ./tests/get-xxd-version.sh
+  COMMAND ./tests/get-xxd-version.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   OUTPUT_VARIABLE XXD_VERSION
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -33,13 +33,13 @@ include(fail.cmake OPTIONAL)
 # Tests that fail on an old version of xxd.
 # My workstation: 2022-01-14 new
 # Ubuntu runner:  2021-10-22 old
-# Windows runner: ??
+# Windows runner: Gets no version number, but it's new xxd.
 # Mac runner:     2022-01-14 new
 if (XXD_VERSION LESS 2022)
   include(fail-xxd-old.cmake OPTIONAL)
 endif()
-# Tests that fail on a new version of xxd.
-if (XXD_VERSION GREATER 2021)
+# Tests that fail on a new version of xxd or no version string:
+if (XXD_VERSION GREATER 2021 OR XXD_VERSION EQUAL "")
   include(fail-xxd-new.cmake OPTIONAL)
 endif()
 
