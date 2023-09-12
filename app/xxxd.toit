@@ -28,7 +28,6 @@ main args:
               --short-name="e"
               --short-help="Write 4-byte words in little endian order",
           cli.Flag "little-endian"
-              --default=false
               --short-help="Read the input data in little endian order",
           cli.Flag "bits"
               --default=false
@@ -59,7 +58,6 @@ main args:
               --short-help="Print version and exit",
           cli.Option "name"
               --short-name="n"
-              --default=""
               --short-help="Name of the variable to assign the data to",
           cli.OptionInt "seek-input"
               --short-name="s"
@@ -79,7 +77,7 @@ main args:
               --short-help="Max bytes per line",
           cli.OptionInt "groupsize"
               --short-name="g"
-              --default=0
+              --default=null
               --short-help="Number of bytes to group together",
           cli.OptionInt "indentation"
               --default=-1
@@ -126,43 +124,49 @@ class Convert:
   constructor parsed:
     auto-skip = parsed["autoskip"]
     line-start = Offset parsed["offset"]
-    word-formatter = RawHexFormatter parsed["upper-case"]
+    if parsed["little-endian"] != null:
+      little-endian = parsed["little-endian"]
+    else:
+      little-endian = parsed["little-endian-4-byte"] == true
+    parsed-group-size/int? := parsed["groupsize"]
+    if parsed-group-size == 0: parsed-group-size=int.MAX
+    group-size = parsed-group-size or 2
     separator = SpaceSeparator
-    trailer = PrintableTrailer
-    little-endian = parsed["little-endian"]
+    trailer = PrintableTrailer --extra-space=little-endian
     if parsed["little-endian-4-byte"]:
-      group-size = 4
+      group-size = parsed-group-size or 4
+      word-formatter =
+          RawHexFormatter parsed["upper-case"] --little-endian=little-endian --group-size=group-size
       cols = 16
-      if parsed["little-endian"] == null:
-        little-endian = true
     else if parsed["bits"]:
-      group-size = 1
+      group-size = parsed-group-size or 1
       cols = 6
-      word-formatter = BinaryFormatter
+      word-formatter = BinaryFormatter --little-endian=little-endian --group-size=group-size
     else if parsed["include"]:
       declaration-allowed = true
-      group-size = 1
+      group-size = parsed-group-size or 1
       cols = 12
       line-start = Indentation --default-indentation=2 parsed["indentation"] parsed["tab-width"] parsed["tabs"]
       if parsed["compact"]:
         word-formatter = CompactFormatter
         separator = CompactCommaSeparator
       else:
-        word-formatter = CFormatter parsed["upper-case"]
+        word-formatter = CFormatter parsed["upper-case"] --little-endian=little-endian --group-size=1
         separator = CommaSeparator
       trailer = NullTrailer
     else if parsed["postscript"]:
-      group-size = 1
+      group-size = parsed-group-size or 1
+      word-formatter =
+          RawHexFormatter parsed["upper-case"] --little-endian=little-endian --group-size=group-size
       cols = 30
       line-start = Indentation --default-indentation=0 parsed["indentation"] parsed["tab-width"] parsed["tabs"]
       separator = NullSeparator
       trailer = NullTrailer
     else:
-      group-size = 2
+      group-size = parsed-group-size or 2
+      word-formatter =
+          RawHexFormatter parsed["upper-case"] --little-endian=little-endian --group-size=group-size
       cols = 16
-
-    if parsed["groupsize"] != 0:
-      group-size = parsed["groupsize"]
 
     if parsed["cols"] != -1:
       cols = parsed["cols"]
@@ -183,12 +187,13 @@ class Convert:
     if cols != int.MAX:
       repeats := cols / group-size
       rest := cols % group-size
+      dummy-data := group-size > 8 ? (ByteArray (min cols group-size)) : 0
       repeats.repeat:
-        normal-size += (word-formatter.format 0 --chunk=group-size).size
+        normal-size += (word-formatter.format dummy-data --chunk=group-size).size
         last-in-line := rest == 0 and it == repeats - 1
         normal-size += (separator.next --last-in-line=last-in-line --last-in-file=false).size
       if rest != 0:
-        normal-size += (word-formatter.format 0 --chunk=rest).size
+        normal-size += (word-formatter.format dummy-data --chunk=rest).size
         normal-size += (separator.next --last-in-line=true --last-in-file=false).size
 
     reader := BufferedReader
@@ -199,7 +204,7 @@ class Convert:
     name := ""
     if in-name != "":
       name = in-name
-    if parsed["name"] != "":
+    if parsed["name"]:
       name = parsed["name"]
     if name != "":
       ba := name.to-byte-array
@@ -256,13 +261,17 @@ class Convert:
             all-zero-printed = false
         else:
           in-all-zero = false
-          
+
       for i := 0; i < data.size; i += group-size:
         chunk := min (data.size - i) group-size
-        word := (little-endian ? LITTLE_ENDIAN : BIG_ENDIAN).read-uint data chunk i
         last-in-line := i + group-size >= data.size
-        line.add
-            word-formatter.format word --chunk=chunk
+        if chunk <= 8:
+          word := (little-endian ? LITTLE_ENDIAN : BIG_ENDIAN).read-uint data chunk i
+          line.add
+              word-formatter.format word --chunk=chunk
+        else:
+          line.add
+              word-formatter.format data[i..i + chunk] --chunk=chunk
         line.add
             separator.next --last-in-line=last-in-line --last-in-file=(last-in-line and last-line)
       line-string := line.join ""
@@ -305,13 +314,19 @@ interface Trailer:
   align -> bool
 
 class PrintableTrailer implements Trailer:
+  extra-space/bool
+
+  constructor --.extra-space:
+
   align -> bool: return true
 
   next bytes/ByteArray --last/bool -> string:
     result := ByteArray bytes.size:
       byte := bytes[it]
       32 <= byte <= 126 ? byte : '.'
-    return "  $result.to-string"
+    return extra-space
+        ? "   $result.to-string"
+        : "  $result.to-string"
 
 class NullTrailer implements Trailer:
   align -> bool: return false
@@ -342,40 +357,63 @@ class SpaceSeparator implements Separator:
     return " "
 
 interface WordFormatter:
-  format word/int --chunk/int -> string
+  format word --chunk/int -> string
 
 abstract class FormatFormatter implements WordFormatter:
   format-string/string? := null
   format-letter/string := ?
   chars-per-byte/int := ?
-  group-size/int := 0
+  format-length/int := 0
+  little-endian/bool := false
+  group-size/int
 
-  constructor .format-letter .chars-per-byte:
+  constructor .format-letter .chars-per-byte --.little-endian --.group-size:
 
-  format word/int --chunk/int -> string:
+  format word --chunk/int -> string:
+    desired-format-string-length := (word is int) ? chunk : 1
     fmt/string := ?
-    if chunk == group-size:
+    if desired-format-string-length == format-length:
       fmt = format-string
     else:
-      fmt = "0$(chunk * chars-per-byte)$format-letter"
+      fmt = "0$(desired-format-string-length * chars-per-byte)$format-letter"
       format-string = fmt  // Cache it.
-    return string.format fmt word
+      format-length = desired-format-string-length
+
+    if word is int:
+      // Fast case for integer based words.
+      result := string.format fmt word
+      if not little-endian or group-size <= chunk: return result
+      return "  " * (group-size - chunk) + result
+    else:
+      // Slower track for words that are byte arrays > 8 bytes.
+      ba := (word as ByteArray)
+      str := ""
+      if little-endian:
+        str = "  " * (group-size - chunk)
+        for i := chunk - 1; i >= 0; i--:
+          str += string.format fmt ba[i]
+      else:
+        chunk.repeat:
+          str += string.format fmt ba[it]
+      return str
 
 class BinaryFormatter extends FormatFormatter:
-  constructor:
-    super "b" 8
+  constructor --little-endian/bool --group-size/int:
+    super "b" 8 --little-endian=little-endian --group-size=group-size
 
 class RawHexFormatter extends FormatFormatter:
-  constructor upper-case:
-    super (upper-case ? "X" : "x") 2
+  constructor upper-case/bool --little-endian/bool --group-size/int:
+    super (upper-case ? "X" : "x") 2 --little-endian=little-endian --group-size=group-size
 
 class CompactFormatter implements WordFormatter:
   format word/int --chunk/int -> string:
     return word.stringify
 
 class CFormatter extends RawHexFormatter:
-  constructor upper-case/bool:
-    super upper-case
+  prefix/string
+  constructor upper-case/bool --little-endian/bool --group-size/int:
+    prefix = upper-case ? "0X" : "0x"
+    super upper-case --little-endian=little-endian --group-size=group-size
 
-  format word/int --chunk/int -> string:
-    return "0x" + (super word --chunk=chunk)
+  format word --chunk/int -> string:
+    return prefix + (super word --chunk=chunk)
