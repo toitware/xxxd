@@ -39,7 +39,7 @@ if (XXD_VERSION LESS 2022)
   include(fail-xxd-old.cmake OPTIONAL)
 endif()
 # Tests that fail on a new version of xxd or no version string:
-if (XXD_VERSION GREATER 2021 OR XXD_VERSION EQUAL "")
+if (XXD_VERSION GREATER 2021 OR XXD_VERSION STREQUAL "")
   include(fail-xxd-new.cmake OPTIONAL)
 endif()
 
