@@ -2,6 +2,17 @@
 # Use of this source code is governed by a Zero-Clause BSD license that can
 # be found in the tests/TESTS_LICENSE file.
 
+# Determine the installed version of xxd:
+execute_process(
+  COMMAND ./tests/get-xxd-version.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE XXD_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Log the XXD version.
+message("XXD version: ${XXD_VERSION}")
+
 file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.options")
 
 set(TEST_TIMEOUT 40 CACHE STRING "The maximal amount of time each test is allowed to run")
@@ -16,10 +27,17 @@ add_custom_target(
 )
 
 set(TEST_PREFIX "")
-# Tests that fail locally and on toitlang/toit.
+set(FAILING_TESTS "")
+# Tests that fail always.
 include(fail.cmake OPTIONAL)
-# Tests that only fail when called with this test runner.
-include(fail_pkg.cmake OPTIONAL)
+# Tests that fail on an old version of xxd.
+if (XXD_VERSION LESS 2022)
+  include(fail-xxd-old.cmake OPTIONAL)
+endif()
+# Tests that fail on a new version of xxd.
+if (XXD_VERSION GREATER 2021)
+  include(fail-xxd-new.cmake OPTIONAL)
+endif()
 
 message("Failing tests: ${FAILING_TESTS}")
 message("Skipped tests: ${SKIP_TESTS}")

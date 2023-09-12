@@ -132,7 +132,7 @@ class Convert:
     if parsed-group-size == 0: parsed-group-size=int.MAX
     group-size = parsed-group-size or 2
     separator = SpaceSeparator
-    trailer = PrintableTrailer --extra-space=little-endian
+    trailer = PrintableTrailer
     if parsed["little-endian-4-byte"]:
       group-size = parsed-group-size or 4
       word-formatter =
@@ -314,19 +314,13 @@ interface Trailer:
   align -> bool
 
 class PrintableTrailer implements Trailer:
-  extra-space/bool
-
-  constructor --.extra-space:
-
   align -> bool: return true
 
   next bytes/ByteArray --last/bool -> string:
     result := ByteArray bytes.size:
       byte := bytes[it]
       32 <= byte <= 126 ? byte : '.'
-    return extra-space
-        ? "   $result.to-string"
-        : "  $result.to-string"
+    return "  $result.to-string"
 
 class NullTrailer implements Trailer:
   align -> bool: return false
