@@ -17,7 +17,7 @@ See the [Releases](releases/) area to download binaries for major OSs.
     * `--little-endian` An option that changes the endianness of multi-byte words without changing the format.
     * `--tabs` Use a mixture of tabs and spaces for indentation.
     * `--tab-width` Change the default tab width if tabs are used (8).
-* Does not have a -r option to convert text back to binary. The `--seek` option is therefore also not supported.
+* Does not have a `-r` option to convert text back to binary. The `--seek` option is therefore also not supported.
 * The `-c` (columns) option is not limited to 256.
 * The `-E` (EBCDIC) option is not supported.
 * The `-p` (postscript) option has only one long form option, `--postscript`.  The `--ps` and `--plain` aliases are not supported.
@@ -27,7 +27,7 @@ See the [Releases](releases/) area to download binaries for major OSs.
 
 ```
 Usage:
-  xxxd.toit [<options>] [--] [<in:file>] [<out:file>]
+  xxxd [<options>] [--] [<in:file>] [<out:file>]
 
 Options:
   -b, --bits                  Write bytes in binary format (default is hex)

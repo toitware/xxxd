@@ -104,7 +104,7 @@ main args:
 
 convert parsed -> none:
   if parsed["version"]:
-    print "xxxd in Toit v0.1.0"
+    print "xxxd v0.1.0"
     return
 
   c := Convert parsed
