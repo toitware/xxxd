@@ -10,96 +10,95 @@ import reader show BufferedReader
 
 main args:
   root-cmd := cli.Command "convert"
-    --long-help="""
-        Convert a binary file to a source code file.
-        Options are largely compatible with the xxd utility from vim.
-        The 'r' (reverse) command is not supported.
-        Single-dash long options like '-name' are not supported: Use '--name' instead.
-        """
-    --options=[
-        cli.Flag "autoskip"
-            --default=false
-            --short-name="a"
-            --short-help="Replace blocks of zeros with '*'",
-        cli.Flag "compact"
-            --default=false
-            --short-help="Omit spaces between bytes, use decimal",
-        cli.Flag "little-endian-4-byte"
-            --default=false
-            --short-name="e"
-            --short-help="Write 4-byte words in little endian order",
-        cli.Flag "little-endian"
-            --default=false
-            --short-help="Read the input data in little endian order",
-        cli.Flag "bits"
-            --default=false
-            --short-name="b"
-            --short-help="Write bytes in binary format",
-        cli.Flag "capitalize"
-            --default=false
-            --short-name="C"
-            --short-help="Capitalize the variable names in C include format",
-        cli.Flag "include"
-            --default=false
-            --short-name="i"
-            --short-help="Produce C include format",
-        cli.Flag "upper-case"
-            --default=false
-            --short-name="u"
-            --short-help="Use upper case hex digits",
-        cli.Flag "postscript"
-            --default=false
-            --short-name="p"
-            --short-help="Use postscript format (no separators)",
-        cli.Flag "tabs"
-            --default=false
-            --short-help="Use tabs for indentation",
-        cli.Flag "version"
-            --short-name="v"
-            --default=false
-            --short-help="Print version and exit",
-        cli.Option "name"
-            --short-name="n"
-            --default=""
-            --short-help="Name of the variable to assign the data to",
-        cli.OptionInt "seek-input"
-            --short-name="s"
-            --default=0
-            --short-help="Number of bytes to skip at the beginning",
-        cli.OptionInt "offset"
-            --short-name="o"
-            --default=0
-            --short-help="Add offset to the displayed byte position",
-        cli.OptionInt "len"
-            --short-name="l"
-            --default=0
-            --short-help="Stop writing after len bytes",
-        cli.OptionInt "cols"
-            --short-name="c"
-            --default=-1
-            --short-help="Max bytes per line",
-        cli.OptionInt "groupsize"
-            --short-name="g"
-            --default=0
-            --short-help="Number of bytes to group together",
-        cli.OptionInt "indentation"
-            --default=-1
-            --short-help="Number of positions to indent by",
-        cli.OptionInt "tab-width"
-            --default=8
-            --short-help="Number of spaces that a tab corresponds to",
-        ]
-    --rest=[
-        cli.Option "in"
-            --default=""
-            --short-help="Input (default stdin)"
-            --type="file",
-        cli.Option "out"
-            --default=""
-            --short-help="Output (default stdin)"
-            --type="file",
-        ]
-    --run= :: convert it
+      --long-help="""
+          Convert a binary file to a source code file.
+          Options are largely compatible with the xxd utility from vim.
+          The 'r' (reverse) command is not supported.
+          """
+      --options=[
+          cli.Flag "autoskip"
+              --default=false
+              --short-name="a"
+              --short-help="Replace blocks of zeros with '*'",
+          cli.Flag "compact"
+              --default=false
+              --short-help="Omit spaces between bytes, use decimal",
+          cli.Flag "little-endian-4-byte"
+              --default=false
+              --short-name="e"
+              --short-help="Write 4-byte words in little endian order",
+          cli.Flag "little-endian"
+              --default=false
+              --short-help="Read the input data in little endian order",
+          cli.Flag "bits"
+              --default=false
+              --short-name="b"
+              --short-help="Write bytes in binary format",
+          cli.Flag "capitalize"
+              --default=false
+              --short-name="C"
+              --short-help="Capitalize the variable names in C include format",
+          cli.Flag "include"
+              --default=false
+              --short-name="i"
+              --short-help="Produce C include format",
+          cli.Flag "upper-case"
+              --default=false
+              --short-name="u"
+              --short-help="Use upper case hex digits",
+          cli.Flag "postscript"
+              --default=false
+              --short-name="p"
+              --short-help="Use postscript format (no separators)",
+          cli.Flag "tabs"
+              --default=false
+              --short-help="Use tabs for indentation",
+          cli.Flag "version"
+              --short-name="v"
+              --default=false
+              --short-help="Print version and exit",
+          cli.Option "name"
+              --short-name="n"
+              --default=""
+              --short-help="Name of the variable to assign the data to",
+          cli.OptionInt "seek-input"
+              --short-name="s"
+              --default=0
+              --short-help="Number of bytes to skip at the beginning",
+          cli.OptionInt "offset"
+              --short-name="o"
+              --default=0
+              --short-help="Add offset to the displayed byte position",
+          cli.OptionInt "len"
+              --short-name="l"
+              --default=0
+              --short-help="Stop writing after len bytes",
+          cli.OptionInt "cols"
+              --short-name="c"
+              --default=-1
+              --short-help="Max bytes per line",
+          cli.OptionInt "groupsize"
+              --short-name="g"
+              --default=0
+              --short-help="Number of bytes to group together",
+          cli.OptionInt "indentation"
+              --default=-1
+              --short-help="Number of positions to indent by",
+          cli.OptionInt "tab-width"
+              --default=8
+              --short-help="Number of spaces that a tab corresponds to",
+          ]
+      --rest=[
+          cli.Option "in"
+              --default=""
+              --short-help="Input (default stdin)"
+              --type="file",
+          cli.Option "out"
+              --default=""
+              --short-help="Output (default stdin)"
+              --type="file",
+          ]
+      --run= :: convert it
   root-cmd.run args
 
 convert parsed -> none:
@@ -117,7 +116,7 @@ class Convert:
   trailer/Trailer
 
   auto-skip/bool
-  declaration-allowed := false
+  declaration-allowed/bool := false
   little-endian/bool
   compact/bool ::= false
   group-size/int
@@ -214,9 +213,9 @@ class Convert:
     if parsed["capitalize"]:
       name = name.to-ascii-upper
 
-    writer := out-name == "" ?
-      pipe.stdout :
-      file.Stream.for-write out-name
+    writer := out-name == ""
+      ? pipe.stdout
+      : file.Stream.for-write out-name
 
     if declaration-allowed and name != "":
       writer.write "unsigned char $(name)[] = {\n"
@@ -230,7 +229,7 @@ class Convert:
     pos := seek-input
 
     while reader.can-ensure 1:
-      bytes := ?
+      bytes/int := ?
       if reader.can-ensure cols:
         bytes = cols
       else:
@@ -354,7 +353,7 @@ abstract class FormatFormatter implements WordFormatter:
   constructor .format-letter .chars-per-byte:
 
   format word/int --chunk/int -> string:
-    fmt := ?
+    fmt/string := ?
     if chunk == group-size:
       fmt = format-string
     else:
