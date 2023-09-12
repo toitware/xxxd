@@ -1,0 +1,5 @@
+unsigned char tests_hello_bin[] = {
+  72,101,108,108,111,44,32,87,111,114,108,100,
+  33,10
+};
+unsigned int tests_hello_bin_len = 14;

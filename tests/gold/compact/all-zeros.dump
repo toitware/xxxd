@@ -1,0 +1,7 @@
+unsigned char tests_all_zeros_bin[] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0
+};
+unsigned int tests_all_zeros_bin_len = 40;

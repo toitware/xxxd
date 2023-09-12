@@ -51,7 +51,7 @@ main args:
               --short-help="Use postscript format (no separators)",
           cli.Flag "tabs"
               --default=false
-              --short-help="Use tabs for indentation",
+              --short-help="Use tabs for indentation of C code",
           cli.Flag "version"
               --short-name="v"
               --default=false

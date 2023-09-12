@@ -14,6 +14,7 @@ execute_process(
 message("XXD version: '${XXD_VERSION}'")
 
 file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.options")
+file(GLOB XXXD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.xxxd-options")
 
 set(TEST_TIMEOUT 40 CACHE STRING "The maximal amount of time each test is allowed to run")
 
@@ -66,3 +67,22 @@ foreach(file ${TESTS})
 
 endforeach()
 
+foreach(file ${XXXD_TESTS})
+  set(test_name "/tests/${file}")
+  if("${test_name}" IN_LIST SKIP_TESTS)
+    continue()
+  endif()
+
+  add_test(
+    NAME "${test_name}"
+    COMMAND "sh" "tests/xxxd-test.sh" ${TOIT_EXEC} "tests/${file}"
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+
+  set_tests_properties(${test_name} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
+
+  if ("${test_name}" IN_LIST FAILING_TESTS)
+    set_tests_properties("${test_name}" PROPERTIES WILL_FAIL TRUE)
+  endif()
+
+endforeach()
