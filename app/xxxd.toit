@@ -221,11 +221,13 @@ class Convert:
     if declaration-allowed and name != "":
       writer.write "unsigned char $(name)[] = {\n"
 
-    pos := 0
     in-all-zero := false
     all-zero-printed := false
 
-    reader.skip parsed["seek-input"]
+    seek-input := parsed["seek-input"]
+    if seek-input < 0: throw "-s options must be non-negative"
+    reader.skip seek-input
+    pos := seek-input
 
     while reader.can-ensure 1:
       bytes := ?
@@ -235,6 +237,8 @@ class Convert:
         bytes = reader.buffered
       data := reader.bytes bytes
       reader.skip bytes
+      line := [line-start.next pos]
+      pos += bytes
       last-line := not reader.can-ensure 1
       if not last-line and auto-skip:
         all-zero := true
@@ -254,10 +258,9 @@ class Convert:
         else:
           in-all-zero = false
           
-      line := [line-start.next pos]
       for i := 0; i < data.size; i += group-size:
         chunk := min (data.size - i) group-size
-        word := (little-endian ? LITTLE_ENDIAN : BIG_ENDIAN).read-int data chunk i
+        word := (little-endian ? LITTLE_ENDIAN : BIG_ENDIAN).read-uint data chunk i
         last-in-line := i + group-size >= data.size
         line.add
             word-formatter.format word --chunk=chunk
@@ -267,7 +270,6 @@ class Convert:
       if trailer.align:
         line-string = line-string.pad --right normal-size
       writer.write "$line-string$(trailer.next data --last=(reader.can-ensure 1))\n"
-      pos += bytes
 
     if declaration-allowed and name != "":
       suffix := parsed["capitalize"] ? "_LEN" : "_len"
