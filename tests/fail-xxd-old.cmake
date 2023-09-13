@@ -8,4 +8,5 @@ list(APPEND FAILING_TESTS
   /tests/include-format-funky-name-upper-case.options  # -n option is new.
   /tests/include-format-numeric-name.options           # -n option is new.
   /tests/include-format-very-funky-name.options        # -n option is new.
+  /tests/little-endian-grouping-4-columns-6.options    # xxd's Alignment of the ASCII section is borked.
 )
