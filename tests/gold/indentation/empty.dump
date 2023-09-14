@@ -1,0 +1,3 @@
+unsigned char TESTS_EMPTY_BIN[] = {
+};
+unsigned int TESTS_EMPTY_BIN_LEN = 0;

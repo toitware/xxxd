@@ -182,6 +182,7 @@ class Convert:
   dump parsed:
     in-name := parsed["in"]
     out-name := parsed["out"]
+    length := (parsed["len"] == 0) ? int.MAX : parsed["len"] + parsed["seek-input"]
 
     normal-size := (line-start.next 0).size
     if cols != int.MAX:
@@ -230,15 +231,26 @@ class Convert:
 
     seek-input := parsed["seek-input"]
     if seek-input < 0: throw "-s options must be non-negative"
-    reader.skip seek-input
-    pos := seek-input
+    pos := 0
+    while pos < seek-input:
+      data := reader.read
+      if data == null:
+        pos = length
+        break
+      pos += data.size
+      if pos > seek-input:
+        too-much := pos - seek-input
+        reader.unget data[data.size - too-much..]
+        pos = seek-input
 
-    while reader.can-ensure 1:
+    while reader.can-ensure 1 and pos < length:
       bytes/int := ?
       if reader.can-ensure cols:
         bytes = cols
       else:
         bytes = reader.buffered
+      if length != int.MAX:
+        bytes = min bytes (length - pos)
       data := reader.bytes bytes
       reader.skip bytes
       line := [line-start.next pos]
