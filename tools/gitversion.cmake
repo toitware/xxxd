@@ -52,7 +52,7 @@ endfunction()
 # Note that "v1.6.0-pre." is also used on a release-v1.6 branch until the release has
 #   happened. Care must be taken to ensure that the version numbers increase correctly.
 # If there isn't any release-branch, then we use the DEFAULT_PRE_VERSION parameter as prefix.
-set(DEFAULT_PRE_VERSION "v2.0.0")
+set(DEFAULT_PRE_VERSION "v0.0.0")
 function(compute_git_version VERSION)
   # Check that we are in a git tree.
   backtick(ignored ${GIT_EXECUTABLE} rev-parse --is-inside-work-tree)
