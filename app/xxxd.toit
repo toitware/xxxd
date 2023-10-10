@@ -7,6 +7,7 @@ import cli
 import host.pipe
 import host.file
 import reader show BufferedReader
+import .version
 
 main args:
   root-cmd := cli.Command "convert"
@@ -101,7 +102,7 @@ main args:
 
 convert parsed -> none:
   if parsed["version"]:
-    print "xxxd v0.1.0"
+    print "xxxd $XXXD_VERSION"
     return
 
   c := Convert parsed
