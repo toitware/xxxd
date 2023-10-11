@@ -4,7 +4,8 @@
 
 all: test
 
-.PHONY: build/host/CMakeCache.txt
+.PHONY: build/CMakeCache.txt
+
 build/CMakeCache.txt:
 	$(MAKE) rebuild-cmake
 
