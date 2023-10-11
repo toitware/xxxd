@@ -8,4 +8,3 @@ add_custom_target(
   COMMAND "${TPKG_EXEC}" install
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
 )
-
