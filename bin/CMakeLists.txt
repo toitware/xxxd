@@ -6,6 +6,6 @@ message("TPKG: ${TPKG_EXEC}")
 add_custom_target(
   "install-pkgs"
   COMMAND "${TPKG_EXEC}" install
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../app"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
 )
 

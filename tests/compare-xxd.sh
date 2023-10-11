@@ -20,7 +20,7 @@ do
   name=${binfile##*/}
   name=${name%%.bin}
   echo "Name '$name'"
-  $TOIT_RUN app/xxxd.toit `cat $OPTIONS_FILE` -- tests/$name.bin build/$name-$optionname.dump
+  $TOIT_RUN bin/xxxd.toit `cat $OPTIONS_FILE` -- tests/$name.bin build/$name-$optionname.dump
   xxd `cat $OPTIONS_FILE` tests/$name.bin build/gold/$name-$optionname.dump
 
   diff -u build/gold/$name-$optionname.dump build/$name-$optionname.dump
