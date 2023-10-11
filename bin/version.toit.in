@@ -8,4 +8,4 @@ It is ignored by git.
 /**
 The version of xxxd.
 */
-XXXD_VERSION/string ::= "@XXXD_GIT_VERSION@"
+XXXD_VERSION/string ::= "@GIT_VERSION@"
