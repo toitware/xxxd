@@ -133,9 +133,9 @@ jobs:
           overwrite: true
 
   sign-windows:
-    runs-on: windows-signing || inputs.sign_windows
+    runs-on: windows-signing
     needs: [build]
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || inputs.sign_windows
     steps:
       - name: Clean workspace
         run: |
@@ -242,6 +242,7 @@ jobs:
           path: ./out
 
       - name: Upload release macOS executable DMG
+        if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
