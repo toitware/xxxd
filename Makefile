@@ -11,7 +11,7 @@ build: rebuild-cmake install-pkgs
 
 .PHONY: test
 test: rebuild-cmake install-pkgs
-	 (cd build && ninja test)
+	 (cd build && ninja check)
 
 .PHONY: build/CMakeCache.txt
 build/CMakeCache.txt:
