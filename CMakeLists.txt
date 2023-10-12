@@ -6,6 +6,11 @@ cmake_minimum_required(VERSION 3.23)
 
 project(xxxd)
 
+set(TOITRUN
+    "toit.run${CMAKE_EXECUTABLE_SUFFIX}"
+    CACHE
+    FILEPATH
+    "The executable used to run programs")
 set(TOITPKG
     "toit.pkg${CMAKE_EXECUTABLE_SUFFIX}"
     CACHE
