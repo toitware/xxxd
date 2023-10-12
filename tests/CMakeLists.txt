@@ -55,7 +55,7 @@ foreach(file ${TESTS})
 
   add_test(
     NAME "${test_name}"
-    COMMAND "sh" "tests/compare-xxd.sh" ${TOIT_EXEC} "tests/${file}"
+    COMMAND "sh" "tests/compare-xxd.sh" ${TOITRUN} "tests/${file}"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
@@ -75,7 +75,7 @@ foreach(file ${XXXD_TESTS})
 
   add_test(
     NAME "${test_name}"
-    COMMAND "sh" "tests/xxxd-test.sh" ${TOIT_EXEC} "tests/${file}"
+    COMMAND "sh" "tests/xxxd-test.sh" ${TOITRUN} "tests/${file}"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
