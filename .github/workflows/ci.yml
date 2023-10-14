@@ -114,6 +114,11 @@ jobs:
         run: |
           make
 
+      - name: Tar.gz Linux executable
+        if: runner.os == 'Linux'
+        run: |
+          tar c -zvf build/${{env.APP_NAME}}-linux.tar.gz -C build ${{env.APP_NAME}}
+
       - name: Run tests
         shell: bash
         run: |
@@ -125,12 +130,19 @@ jobs:
           name: binaries-${{ runner.os }}
           path: build/${{env.APP_NAME}}${{ env.BIN_EXTENSION }}
 
+      - name: Upload Linux tar.gz
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-Linux-tar
+          path: build/${{env.APP_NAME}}-linux.tar.gz
+
       - name: Upload release Linux executable
         if: github.event_name == 'release' && runner.os == 'Linux'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/${{env.APP_NAME}}
+          file: build/${{env.APP_NAME}}-linux.tar.gz
           tag: ${{ github.event.release.tag_name }}
           overwrite: true
 
@@ -164,6 +176,11 @@ jobs:
           mkdir out
           copy build/${{env.APP_NAME}}.exe out/${{env.APP_NAME}}.exe
 
+      - name: Zip signed
+        run: |
+          cd out
+          7z a ${{env.APP_NAME}}-windows.zip ${{env.APP_NAME}}.exe
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -175,7 +192,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: out/${{env.APP_NAME}}.exe
+          file: out/${{env.APP_NAME}}-windows.zip
           tag: ${{ github.event.release.tag_name }}
           overwrite: true
 
@@ -230,12 +247,12 @@ jobs:
           create-dmg \
               --volname "${{env.APP_NAME}}" \
               --add-file ${{env.APP_NAME}} build/${{env.APP_NAME}} 0 0 \
-              out/${{env.APP_NAME}}.dmg \
+              out/${{env.APP_NAME}}-macos.dmg \
               empty
 
       - name: Create a ZIP
         run: |
-          zip -j out/${{env.APP_NAME}}.zip build/${{env.APP_NAME}}
+          zip -j out/${{env.APP_NAME}}-macos.zip build/${{env.APP_NAME}}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -248,7 +265,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: out/${{env.APP_NAME}}.dmg
+          file: out/${{env.APP_NAME}}-macos.dmg
           tag: ${{ github.event.release.tag_name }}
           overwrite: true
 
@@ -257,6 +274,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: out/${{env.APP_NAME}}.zip
+          file: out/${{env.APP_NAME}}-macos.zip
           tag: ${{ github.event.release.tag_name }}
           overwrite: true
