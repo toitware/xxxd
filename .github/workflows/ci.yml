@@ -1,53 +1,82 @@
+# Copyright (C) 2023 Toitware ApS. All rights reserved.
+
 name: CI
 
 on:
-  push:
+  workflow_dispatch:
+    inputs:
+      sign_macos:
+        description: Sign the macOS binary
+        type: boolean
+        required: true
+        default: false
+      sign_windows:
+        description: Sign the Windows binary
+        type: boolean
+        required: true
+        default: false
   release:
     types: [published]
+  push:
+    branches:
+      - "*"
+      - "*/*"
+
+env:
+  TOIT_VERSION: v2.0.0-alpha.114
+  APP_NAME: xxxd
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup constants
+      - name: Setup Toit
         shell: bash
         run: |
-          TOIT_VERSION=v2.0.0-alpha.97
-          echo "TOIT_VERSION=$TOIT_VERSION" >> $GITHUB_ENV
-          export DOWNLOAD_DIR="${{ github.workspace }}/downloads"
-          echo "DOWNLOAD_DIR=$DOWNLOAD_DIR" >> $GITHUB_ENV
-          if [[ "$RUNNER_OS" = "Linux" ]]; then
-            TOIT_FILE=toit-linux.tar.gz
-            echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run" >> $GITHUB_ENV
-            echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg" >> $GITHUB_ENV
-            echo "TCOMPILE_EXEC=$DOWNLOAD_DIR/toit/bin/toit.compile" >> $GITHUB_ENV
-          elif [[ "$RUNNER_OS" = "macOS" ]]; then
-            TOIT_FILE=toit-macos.tar.gz
-            echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run" >> $GITHUB_ENV
-            echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg" >> $GITHUB_ENV
-            echo "TCOMPILE_EXEC=$DOWNLOAD_DIR/toit/bin/toit.compile" >> $GITHUB_ENV
-          elif [[ "$RUNNER_OS" = "Windows" ]]; then
-            TOIT_FILE=toit-windows.tar.gz
-            echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run.exe" >> $GITHUB_ENV
-            echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg.exe" >> $GITHUB_ENV
-            echo "TCOMPILE_EXEC=$DOWNLOAD_DIR/toit/bin/toit.compile.exe" >> $GITHUB_ENV
-          else
-            echo "UNSUPPORTED RUNNER: $RUNNER_OS"
-            exit 1
+          if [[ "$RUNNER_OS" = "Windows" ]]; then
+            BIN_EXTENSION=".exe"
           fi
+          echo "BIN_EXTENSION=$BIN_EXTENSION" >> $GITHUB_ENV
 
-          if [[ $TOIT_VERSION = latest ]]; then
-            echo "TOIT_URL=https://github.com/toitlang/toit/releases/latest/download/$TOIT_FILE" >> $GITHUB_ENV
-          else
-            echo "TOIT_URL=https://github.com/toitlang/toit/releases/download/$TOIT_VERSION/$TOIT_FILE" >> $GITHUB_ENV
-          fi
+          export NATIVE_DOWNLOAD_DIR="${{ github.workspace }}/downloads"
+          echo "NATIVE_DOWNLOAD_DIR=$NATIVE_DOWNLOAD_DIR" >> $GITHUB_ENV
+
+          export DOWNLOAD_DIR="$PWD/downloads"
+          echo "DOWNLOAD_DIR=$DOWNLOAD_DIR" >> $GITHUB_ENV
+
+          TOIT_SDK_DIR=$DOWNLOAD_DIR/toit
+          echo "TOIT_EXEC=$TOIT_SDK_DIR/bin/toit.run$BIN_EXTENSION" >> $GITHUB_ENV
+          echo "TOITC_EXEC=$TOIT_SDK_DIR/bin/toit.compile$BIN_EXTENSION" >> $GITHUB_ENV
+          echo "TPKG_EXEC=$TOIT_SDK_DIR/bin/toit.pkg$BIN_EXTENSION" >> $GITHUB_ENV
+
+          TOIT_SDK_FILE=toit-$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]').tar.gz
+          TOIT_SDK_BASE_URL=https://github.com/toitlang/toit/releases
+
+          echo "TOIT_SDK_URL=$TOIT_SDK_BASE_URL/download/$TOIT_VERSION/$TOIT_SDK_FILE" >> $GITHUB_ENV
+
+      - uses: suisei-cn/actions-download-file@v1.3.0
+        name: Download Toit
+        with:
+          url: ${{ env.TOIT_SDK_URL }}
+          target: ${{ env.NATIVE_DOWNLOAD_DIR }}
+
+      - name: Extract Toit
+        shell: bash
+        run: |
+          cd "$DOWNLOAD_DIR"
+          for f in *.tar.gz; do
+            tar x -f $f
+          done
+          ls $TOIT_EXEC
+          ls $TOITC_EXEC
+          ls $TPKG_EXEC
 
       # Fetch the dependencies. Different for each platform.
       - name: Install dependencies - Linux
@@ -70,30 +99,181 @@ jobs:
           ninja --version
           cmake --version
 
-      - uses: suisei-cn/actions-download-file@v1.3.0
-        name: Download Toit
-        with:
-          url: ${{ env.TOIT_URL }}
-          target: ${{ env.DOWNLOAD_DIR }}
-
-      - name: Extract Toit
-        shell: bash
-        run: |
-          cd "$DOWNLOAD_DIR"
-          tar x -f *.tar.gz
-
       - name: Run cmake
         shell: bash
         run: |
           make rebuild-cmake
-          cmake "-DTOIT_EXEC=$TOIT_EXEC" "-DTCOMPILE_EXEC=$TCOMPILE_EXEC" "-DTPKG_EXEC=$TPKG_EXEC" build
+          cmake \
+              -DTOITC="$TOITC_EXEC" \
+              -DTOITPKG="$TPKG_EXEC" \
+              -DTOITRUN="$TOIT_EXEC" \
+              build
 
-      - name: Install packages
+      - name: Build binaries
         shell: bash
         run: |
-          make install-pkgs
+          make
 
-      - name: Test
+      - name: Tar.gz Linux executable
+        if: runner.os == 'Linux'
+        run: |
+          tar c -zvf build/${{env.APP_NAME}}-linux.tar.gz -C build ${{env.APP_NAME}}
+
+      - name: Run tests
         shell: bash
         run: |
           make test
+
+      - name: Upload binary artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-${{ runner.os }}
+          path: build/${{env.APP_NAME}}${{ env.BIN_EXTENSION }}
+
+      - name: Upload Linux tar.gz
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-Linux-tar
+          path: build/${{env.APP_NAME}}-linux.tar.gz
+
+      - name: Upload release Linux executable
+        if: github.event_name == 'release' && runner.os == 'Linux'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/${{env.APP_NAME}}-linux.tar.gz
+          tag: ${{ github.event.release.tag_name }}
+          overwrite: true
+
+  sign-windows:
+    runs-on: windows-signing
+    needs: [build]
+    if: github.event_name == 'release' || inputs.sign_windows
+    steps:
+      - name: Clean workspace
+        run: |
+          rm -Recurse -Force ${{ github.workspace }}\*
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries-Windows
+          path: in
+
+      - name: Copy to build
+        run: |
+          mkdir build/windows
+          copy in/${{env.APP_NAME}}.exe build/${{env.APP_NAME}}.exe
+
+      - name: Sign ${{env.APP_NAME}}
+        working-directory: ./build
+        # Signs in place.
+        run: |
+          signtool sign /debug /n "Toitware ApS" /t http://timestamp.digicert.com/ $PWD/${{env.APP_NAME}}.exe
+
+      - name: Copy signed to out
+        run: |
+          mkdir out
+          copy build/${{env.APP_NAME}}.exe out/${{env.APP_NAME}}.exe
+
+      - name: Zip signed
+        run: |
+          cd out
+          7z a ${{env.APP_NAME}}-windows.zip ${{env.APP_NAME}}.exe
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-Windows-signed
+          path: ./out
+
+      - name: Upload release Windows executable
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out/${{env.APP_NAME}}-windows.zip
+          tag: ${{ github.event.release.tag_name }}
+          overwrite: true
+
+  sign_macos:
+    runs-on: macos-latest
+    needs: [build]
+    if: github.event_name == 'release' || inputs.sign_macos
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries-macOS
+          path: in
+
+      - name: Install dependencies
+        run: |
+          set -e
+          brew install create-dmg
+          brew install zip
+
+      - name: Copy to build
+        run: |
+          mkdir -p build
+          cp in/${{env.APP_NAME}} build/${{env.APP_NAME}}
+
+      - name: Setup binary rights
+        run: |
+          chmod +x build/${{env.APP_NAME}}
+
+      - name: Sign and notarize
+        uses: toitlang/action-macos-sign-notarize@v1.0.0
+        with:
+          certificate: ${{ secrets.MACOS_CERTIFICATE }}
+          certificate-password: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          username: ${{ secrets.AC_USERNAME }}
+          password: ${{ secrets.AC_PASSWORD }}
+          apple-team-id: 33DS2ZRDST
+          # Signs in place.
+          app-path: build/${{env.APP_NAME}}
+
+      - name: Create out folder
+        run: |
+          mkdir -p out
+
+      - name: Create a DMG
+        run: |
+          # Use an empty directory as source so we don't accidentally add other files than the
+          # ${{env.APP_NAME}} binary.
+          set -e
+          mkdir empty
+          create-dmg \
+              --volname "${{env.APP_NAME}}" \
+              --add-file ${{env.APP_NAME}} build/${{env.APP_NAME}} 0 0 \
+              out/${{env.APP_NAME}}-macos.dmg \
+              empty
+
+      - name: Create a ZIP
+        run: |
+          zip -j out/${{env.APP_NAME}}-macos.zip build/${{env.APP_NAME}}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-macOS-signed
+          path: ./out
+
+      - name: Upload release macOS executable DMG
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out/${{env.APP_NAME}}-macos.dmg
+          tag: ${{ github.event.release.tag_name }}
+          overwrite: true
+
+      - name: Upload release macOS executable ZIP
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out/${{env.APP_NAME}}-macos.zip
+          tag: ${{ github.event.release.tag_name }}
+          overwrite: true
