@@ -1,0 +1,1 @@
+-s aeiou aeiou < %input > %output

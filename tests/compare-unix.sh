@@ -16,15 +16,27 @@ mkdir -p build/gold
 # Get the name of the file without the path and the extension.
 optionname=${OPTIONS_FILE##*/}
 optionname=${optionname%%.options}
-echo Testing $optionname options: `cat $OPTIONS_FILE`
+OPTIONS=`cat $OPTIONS_FILE`
+echo Testing $optionname options: $OPTIONS
 for binfile in tests/$TOIT_NAME-inputs/*.bin
 do
   name=${binfile##*/}
   name=${name%%.bin}
   echo "Name '$name'"
-  $TOIT_RUN bin/$TOIT_NAME.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$UNIX_NAME-$name-$optionname.out
-  $UNIX_NAME `cat $OPTIONS_FILE` tests/$TOIT_NAME-inputs/$name.bin build/gold/$UNIX_NAME-$name-$optionname.out
+  in_file=tests/$TOIT_NAME-inputs/$name.bin
+  toit_out_file=build/$TOIT_NAME-$name-$optionname.out
+  unix_out_file=build/gold/$UNIX_NAME-$name-$optionname.out
+  if [[ "$OPTIONS" == *"%input"* ]]; then
+    OPTIONS_WITH_INPUT="${OPTIONS//%input/$in_file}"
+    TOIT_OPTIONS_WITH_FILES="${OPTIONS_WITH_INPUT//%output/$toit_out_file}"
+    UNIX_OPTIONS_WITH_FILES="${OPTIONS_WITH_INPUT//%output/$unix_out_file}"
+  else
+    TOIT_OPTIONS_WITH_FILES="$OPTIONS -- $in_file $toit_out_file"
+    UNIX_OPTIONS_WITH_FILES="$OPTIONS $in_file $unix_out_file"
+  fi
+  bash -c "$TOIT_RUN bin/$TOIT_NAME.toit $TOIT_OPTIONS_WITH_FILES"
+  bash -c "$UNIX_NAME $UNIX_OPTIONS_WITH_FILES"
 
-  diff -u build/gold/$UNIX_NAME-$name-$optionname.out build/$UNIX_NAME-$name-$optionname.out
-  cmp build/$UNIX_NAME-$name-$optionname.out build/gold/$UNIX_NAME-$name-$optionname.out
+  diff -u build/gold/$UNIX_NAME-$name-$optionname.out build/$TOIT_NAME-$name-$optionname.out
+  cmp build/$TOIT_NAME-$name-$optionname.out build/gold/$UNIX_NAME-$name-$optionname.out
 done

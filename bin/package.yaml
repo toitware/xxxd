@@ -5,3 +5,6 @@ dependencies:
   host:
     url: github.com/toitlang/pkg-host
     version: ^1.9.0
+  tr:
+    url: github.com/toitlang/pkg-tr
+    version: ^1.0.0

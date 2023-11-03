@@ -17,14 +17,25 @@ optionname=${OPTIONS_FILE##*/}
 optionname=${optionname%%.$TOIT_NAME-options}
 mkdir -p tests/gold/$TOIT_NAME-$optionname
 mkdir -p build/$TOIT_NAME-$optionname
-echo Testing $optionname options: `cat $OPTIONS_FILE`
+OPTIONS=`cat $OPTIONS_FILE`
+echo Testing $optionname options: $OPTIONS
 exitvalue=0
 for binfile in tests/$TOIT_NAME-inputs/*.bin
 do
   name=${binfile##*/}
   name=${name%%.bin}
   echo "Name '$name'"
- $TOIT_RUN bin/$TOIT_NAME.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$TOIT_NAME-$optionname/$name.out
+  in_file=tests/$TOIT_NAME-inputs/$name.bin
+  out_file=build/$TOIT_NAME-$optionname/$name.out
+  if [[ "$OPTIONS" == *"%input"* ]]; then
+# Substitute %input with $in_file:
+    OPTIONS_WITH_INPUT="${OPTIONS//%input/$in_file}"
+    OPTIONS_WITH_FILES="${OPTIONS_WITH_INPUT//%output/$out_file}"
+  else
+    OPTIONS_WITH_FILES="$OPTIONS -- $in_file $out_file"
+  fi
+  echo $TOIT_RUN bin/$TOIT_NAME.toit $OPTIONS_WITH_FILES
+  $TOIT_RUN bin/$TOIT_NAME.toit $OPTIONS_WITH_FILES
 
   if [ ! -f tests/gold/$TOIT_NAME-$optionname/$name.out ]; then
     echo "No file: tests/gold/$TOIT_NAME-$optionname/$name.out"
