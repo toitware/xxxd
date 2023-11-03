@@ -7,6 +7,9 @@ toit_project(xxxd "${CMAKE_CURRENT_LIST_DIR}")
 set(XXXD_SOURCE "${CMAKE_CURRENT_LIST_DIR}/xxxd.toit")
 set(XXXD_EXE "${CMAKE_BINARY_DIR}/xxxd${CMAKE_EXECUTABLE_SUFFIX}")
 set(XXXD_DEP "${CMAKE_CURRENT_BINARY_DIR}/xxxd.dep")
+set(TR_SOURCE "${CMAKE_CURRENT_LIST_DIR}/tr.toit")
+set(TR_EXE "${CMAKE_BINARY_DIR}/tr${CMAKE_EXECUTABLE_SUFFIX}")
+set(TR_DEP "${CMAKE_CURRENT_BINARY_DIR}/tr.dep")
 
 ADD_TOIT_EXE(
   ${XXXD_SOURCE}
@@ -15,9 +18,16 @@ ADD_TOIT_EXE(
   ""
 )
 
-add_custom_target(
-  build_xxxd
-  DEPENDS ${XXXD_EXE}
+ADD_TOIT_EXE(
+  ${TR_SOURCE}
+  ${TR_EXE}
+  ${TR_DEP}
+  ""
 )
 
-add_dependencies(build build_xxxd)
+add_custom_target(
+  build_binaries
+  DEPENDS ${XXXD_EXE} ${TR_EXE}
+)
+
+add_dependencies(build build_binaries)
