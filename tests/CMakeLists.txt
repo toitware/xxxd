@@ -60,7 +60,7 @@ function(add_gold_tests TESTS TOIT_NAME UNIX_NAME)
 
     add_test(
       NAME "${test_name}"
-      COMMAND "sh" "tests/gold-test.sh" ${TOITRUN} "tests/${file}" ${TOIT_NAME} ${UNIX_NAME}
+      COMMAND "bash" "tests/gold-test.sh" ${TOITRUN} "tests/${file}" ${TOIT_NAME} ${UNIX_NAME}
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
@@ -82,7 +82,7 @@ function(add_unix_tests TESTS TOIT_NAME UNIX_NAME)
 
     add_test(
       NAME "${test_name}"
-      COMMAND "sh" "tests/compare-unix.sh" ${TOITRUN} "tests/${file}" ${TOIT_NAME} ${UNIX_NAME}
+      COMMAND "bash" "tests/compare-unix.sh" ${TOITRUN} "tests/${file}" ${TOIT_NAME} ${UNIX_NAME}
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
