@@ -1,4 +1,4 @@
 # Gold files should not be normalized
-*.dump text eol=lf
+*.out text eol=lf
 # Files that are treated as binaries should not be normalized
 *.bin text eol=lf
