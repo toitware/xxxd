@@ -14,7 +14,7 @@ mkdir -p build
 
 # Get the name of the file without the path and the extension.
 optionname=${OPTIONS_FILE##*/}
-optionname=${optionname%%.xxxd-options}
+optionname=${optionname%%.$TOIT_NAME-options}
 mkdir -p tests/gold/$TOIT_NAME-$optionname
 mkdir -p build/$TOIT_NAME-$optionname
 echo Testing $optionname options: `cat $OPTIONS_FILE`
@@ -24,7 +24,7 @@ do
   name=${binfile##*/}
   name=${name%%.bin}
   echo "Name '$name'"
- $TOIT_RUN bin/xxxd.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$TOIT_NAME-$optionname/$name.out
+ $TOIT_RUN bin/$TOIT_NAME.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$TOIT_NAME-$optionname/$name.out
 
   if [ ! -f tests/gold/$TOIT_NAME-$optionname/$name.out ]; then
     echo "No file: tests/gold/$TOIT_NAME-$optionname/$name.out"

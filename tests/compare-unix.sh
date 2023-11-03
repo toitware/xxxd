@@ -8,7 +8,7 @@ set -e
 TOIT_RUN=$1
 OPTIONS_FILE=$2
 TOIT_NAME=$3   # eg. xxxd or tr.
-UNIX_NAME=$$   # eg. xxd or tr.
+UNIX_NAME=$4   # eg. xxd or tr.
 
 mkdir -p build
 mkdir -p build/gold
@@ -23,7 +23,7 @@ do
   name=${name%%.bin}
   echo "Name '$name'"
   $TOIT_RUN bin/$TOIT_NAME.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$UNIX_NAME-$name-$optionname.out
-  xxd `cat $OPTIONS_FILE` tests/$TOIT_NAME-inputs/$name.bin build/gold/$UNIX_NAME-$name-$optionname.out
+  $UNIX_NAME `cat $OPTIONS_FILE` tests/$TOIT_NAME-inputs/$name.bin build/gold/$UNIX_NAME-$name-$optionname.out
 
   diff -u build/gold/$UNIX_NAME-$name-$optionname.out build/$UNIX_NAME-$name-$optionname.out
   cmp build/$UNIX_NAME-$name-$optionname.out build/gold/$UNIX_NAME-$name-$optionname.out
