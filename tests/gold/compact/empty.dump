@@ -1,3 +1,0 @@
-unsigned char tests_empty_bin[] = {
-};
-unsigned int tests_empty_bin_len = 0;

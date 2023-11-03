@@ -1,5 +1,0 @@
-unsigned char tests_input_bin[] = {
-  83,195,184,101,110,32,115,195,165,32,115,195,
-  166,114,32,117,100,33,10
-};
-unsigned int tests_input_bin_len = 19;

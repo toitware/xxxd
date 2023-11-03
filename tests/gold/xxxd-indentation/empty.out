@@ -1,0 +1,3 @@
+unsigned char TESTS_XXXD_INPUTS_EMPTY_BIN[] = {
+};
+unsigned int TESTS_XXXD_INPUTS_EMPTY_BIN_LEN = 0;
