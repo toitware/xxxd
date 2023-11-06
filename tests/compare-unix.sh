@@ -16,7 +16,7 @@ mkdir -p build/gold
 # Get the name of the file without the path and the extension.
 optionname=${OPTIONS_FILE##*/}
 optionname=${optionname%%.options}
-OPTIONS=`cat $OPTIONS_FILE`
+OPTIONS=$(cat $OPTIONS_FILE)
 echo Testing $optionname options: $OPTIONS
 for binfile in tests/$TOIT_NAME-inputs/*.bin
 do

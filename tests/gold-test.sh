@@ -17,7 +17,7 @@ optionname=${OPTIONS_FILE##*/}
 optionname=${optionname%%.$TOIT_NAME-options}
 mkdir -p tests/gold/$TOIT_NAME-$optionname
 mkdir -p build/$TOIT_NAME-$optionname
-OPTIONS=`cat $OPTIONS_FILE`
+OPTIONS=$(cat $OPTIONS_FILE)
 echo Testing $optionname options: $OPTIONS
 exitvalue=0
 for binfile in tests/$TOIT_NAME-inputs/*.bin
