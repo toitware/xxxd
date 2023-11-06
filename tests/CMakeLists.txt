@@ -48,6 +48,11 @@ if (XXD_VERSION GREATER 2021 OR XXD_VERSION STREQUAL "")
   include(fail-xxd-new.cmake OPTIONAL)
 endif()
 
+# If we are running on Windows
+if (WIN32)
+  include(fail-windows.cmake OPTIONAL)
+endif()
+
 message("Failing tests: ${FAILING_TESTS}")
 message("Skipped tests: ${SKIP_TESTS}")
 
