@@ -24,7 +24,7 @@ do
   name=${binfile##*/}
   name=${name%%.bin}
   echo "Name '$name'"
- $TOIT_RUN bin/$TOIT_NAME.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$TOIT_NAME-$optionname/$name.out
+ $TOIT_RUN bin/$TOIT_NAME.toit $(cat $OPTIONS_FILE) -- tests/$TOIT_NAME-inputs/$name.bin build/$TOIT_NAME-$optionname/$name.out
 
   if [ ! -f tests/gold/$TOIT_NAME-$optionname/$name.out ]; then
     echo "No file: tests/gold/$TOIT_NAME-$optionname/$name.out"

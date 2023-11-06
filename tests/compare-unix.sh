@@ -22,8 +22,8 @@ do
   name=${binfile##*/}
   name=${name%%.bin}
   echo "Name '$name'"
-  $TOIT_RUN bin/$TOIT_NAME.toit `cat $OPTIONS_FILE` -- tests/$TOIT_NAME-inputs/$name.bin build/$UNIX_NAME-$name-$optionname.out
-  $UNIX_NAME `cat $OPTIONS_FILE` tests/$TOIT_NAME-inputs/$name.bin build/gold/$UNIX_NAME-$name-$optionname.out
+  $TOIT_RUN bin/$TOIT_NAME.toit $(cat $OPTIONS_FILE) -- tests/$TOIT_NAME-inputs/$name.bin build/$UNIX_NAME-$name-$optionname.out
+  $UNIX_NAME $(cat $OPTIONS_FILE) tests/$TOIT_NAME-inputs/$name.bin build/gold/$UNIX_NAME-$name-$optionname.out
 
   diff -u build/gold/$UNIX_NAME-$name-$optionname.out build/$UNIX_NAME-$name-$optionname.out
   cmp build/$UNIX_NAME-$name-$optionname.out build/gold/$UNIX_NAME-$name-$optionname.out
