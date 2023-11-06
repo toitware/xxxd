@@ -4,5 +4,5 @@
 
 # Append to FAILING_TESTS array:
 list(APPEND FAILING_TESTS
-  /tests/elide-zeros.options   # xxd needs a larger zero chunk before it starts using *.
+  /tests/xxd-unix/elide-zeros.options   # xxd needs a larger zero chunk before it starts using *.
 )

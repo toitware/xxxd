@@ -1,0 +1,7 @@
+unsigned char tests_xxxd_inputs_zeros_in_beginning_bin[] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,70,111,111,116,101,114,10
+};
+unsigned int tests_xxxd_inputs_zeros_in_beginning_bin_len = 47;

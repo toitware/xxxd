@@ -13,8 +13,8 @@ execute_process(
 # Log the XXD version.
 message("XXD version: '${XXD_VERSION}'")
 
-file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.options")
-file(GLOB XXXD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.xxxd-options")
+file(GLOB GOLD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "xxd-unix/*.options")
+file(GLOB XXXD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "xxxd/*.xxxd-options")
 
 set(TEST_TIMEOUT 40 CACHE STRING "The maximal amount of time each test is allowed to run")
 
@@ -47,7 +47,7 @@ endif()
 message("Failing tests: ${FAILING_TESTS}")
 message("Skipped tests: ${SKIP_TESTS}")
 
-foreach(file ${TESTS})
+foreach(file ${GOLD_TESTS})
   set(test_name "/tests/${file}")
   if("${test_name}" IN_LIST SKIP_TESTS)
     continue()
@@ -55,7 +55,7 @@ foreach(file ${TESTS})
 
   add_test(
     NAME "${test_name}"
-    COMMAND "sh" "tests/compare-xxd.sh" ${TOITRUN} "tests/${file}"
+    COMMAND "sh" "tests/compare-unix.sh" ${TOITRUN} "tests/${file}" xxxd xxd
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
@@ -75,7 +75,7 @@ foreach(file ${XXXD_TESTS})
 
   add_test(
     NAME "${test_name}"
-    COMMAND "sh" "tests/xxxd-test.sh" ${TOITRUN} "tests/${file}"
+    COMMAND "sh" "tests/gold-test.sh" ${TOITRUN} "tests/${file}" "xxxd" "xxd"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   )
 
