@@ -2,6 +2,7 @@ sdk: ^2.0.0-alpha.64
 prefixes:
   cli: pkg-cli
   host: pkg-host
+  tr: pkg-tr
 packages:
   pkg-cli:
     url: github.com/toitlang/pkg-cli
@@ -13,3 +14,8 @@ packages:
     name: host
     version: 1.9.0
     hash: 76e4dc5328a5c3739e97f65ed196d05058071359
+  pkg-tr:
+    url: github.com/toitlang/pkg-tr
+    name: tr
+    version: 1.0.0
+    hash: 9e077a90e1c6a58688cecfdfefe9c4b0bfb9179d

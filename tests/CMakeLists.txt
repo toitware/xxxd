@@ -13,8 +13,12 @@ execute_process(
 # Log the XXD version.
 message("XXD version: '${XXD_VERSION}'")
 
-file(GLOB GOLD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "xxd-unix/*.options")
+# Tests where we compare with the Unix version of the tool.
+file(GLOB UNIX_XXD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "xxd-unix/*.options")
+file(GLOB UNIX_TR_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tr-unix/*.options")
+# Tests where we compare with gold files.
 file(GLOB XXXD_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "xxxd/*.xxxd-options")
+file(GLOB TR_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tr/*.tr-options")
 
 set(TEST_TIMEOUT 40 CACHE STRING "The maximal amount of time each test is allowed to run")
 
@@ -44,45 +48,60 @@ if (XXD_VERSION GREATER 2021 OR XXD_VERSION STREQUAL "")
   include(fail-xxd-new.cmake OPTIONAL)
 endif()
 
+# If we are running on Windows
+if (WIN32)
+  include(fail-windows.cmake OPTIONAL)
+endif()
+
 message("Failing tests: ${FAILING_TESTS}")
 message("Skipped tests: ${SKIP_TESTS}")
 
-foreach(file ${GOLD_TESTS})
-  set(test_name "/tests/${file}")
-  if("${test_name}" IN_LIST SKIP_TESTS)
-    continue()
-  endif()
+function(add_gold_tests TESTS TOIT_NAME UNIX_NAME)
+  foreach(file ${${TESTS}})
+    set(test_name "/tests/${file}")
+    if("${test_name}" IN_LIST SKIP_TESTS)
+      continue()
+    endif()
 
-  add_test(
-    NAME "${test_name}"
-    COMMAND "sh" "tests/compare-unix.sh" ${TOITRUN} "tests/${file}" xxxd xxd
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  )
+    add_test(
+      NAME "${test_name}"
+      COMMAND "bash" "tests/gold-test.sh" ${TOITRUN} "tests/${file}" ${TOIT_NAME} ${UNIX_NAME}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
 
-  set_tests_properties(${test_name} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
+    set_tests_properties(${test_name} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
 
-  if ("${test_name}" IN_LIST FAILING_TESTS)
-    set_tests_properties("${test_name}" PROPERTIES WILL_FAIL TRUE)
-  endif()
+    if ("${test_name}" IN_LIST FAILING_TESTS)
+      set_tests_properties("${test_name}" PROPERTIES WILL_FAIL TRUE)
+    endif()
 
-endforeach()
+  endforeach()
+endfunction()
 
-foreach(file ${XXXD_TESTS})
-  set(test_name "/tests/${file}")
-  if("${test_name}" IN_LIST SKIP_TESTS)
-    continue()
-  endif()
+function(add_unix_tests TESTS TOIT_NAME UNIX_NAME)
+  foreach(file ${${TESTS}})
+    set(test_name "/tests/${file}")
+    if("${test_name}" IN_LIST SKIP_TESTS)
+      continue()
+    endif()
 
-  add_test(
-    NAME "${test_name}"
-    COMMAND "sh" "tests/gold-test.sh" ${TOITRUN} "tests/${file}" "xxxd" "xxd"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  )
+    add_test(
+      NAME "${test_name}"
+      COMMAND "bash" "tests/compare-unix.sh" ${TOITRUN} "tests/${file}" ${TOIT_NAME} ${UNIX_NAME}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
 
-  set_tests_properties(${test_name} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
+    set_tests_properties(${test_name} PROPERTIES TIMEOUT ${TEST_TIMEOUT})
 
-  if ("${test_name}" IN_LIST FAILING_TESTS)
-    set_tests_properties("${test_name}" PROPERTIES WILL_FAIL TRUE)
-  endif()
+    if ("${test_name}" IN_LIST FAILING_TESTS)
+      set_tests_properties("${test_name}" PROPERTIES WILL_FAIL TRUE)
+    endif()
 
-endforeach()
+  endforeach()
+endfunction()
+
+add_gold_tests(XXXD_TESTS xxxd xxd)
+add_unix_tests(UNIX_XXD_TESTS xxxd xxd)
+
+add_gold_tests(TR_TESTS tr tr)
+add_unix_tests(UNIX_TR_TESTS tr tr)
